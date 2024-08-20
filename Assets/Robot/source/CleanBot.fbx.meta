@@ -36,8 +36,8 @@ ModelImporter:
       name: CleanBot|Look_And_Walk
       takeName: CleanBot|Look_And_Walk
       internalID: -4571706960836668680
-      firstFrame: 0
-      lastFrame: 189
+      firstFrame: 12
+      lastFrame: 89
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -60,7 +60,7 @@ ModelImporter:
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}
-      additiveReferencePoseFrame: 0
+      additiveReferencePoseFrame: 12
     isReadable: 0
   meshes:
     lODScreenPercentages: []
