@@ -18,7 +18,7 @@ public class BotInstantiator : MonoBehaviour
 
             float velocity = Random.Range(minRange, maxRange);
             int colorStarter = Random.Range(1,3);
-            Vector3 position = new Vector3(Random.Range(-5f,5f), 0, Random.Range(-5f,5f));
+            Vector3 position = new Vector3(Random.Range(-4f,4f), 0, Random.Range(-7f,7f));
             if (currentBotScript != null){
                 currentBotScript.Init(velocity, colorStarter, position);
             }

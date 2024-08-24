@@ -11,6 +11,7 @@ public class RobotMovementManager : MonoBehaviour
     [SerializeField] SpotLight siren;
     public int randomColorStart;
     public float velocity;
+    private float raySize = 1.0f;
 
     public void Init(float _velocity, int _randomColorStart, Vector3 _position)
     {
@@ -27,14 +28,54 @@ public class RobotMovementManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RaycastHit hit;
+        
         Vector3 p1 = center.transform.position;
 
-        if (Physics.Raycast(p1, center.transform.forward, out hit, 2.0f)){
-            string hitTag = hit.collider.gameObject.tag;
-            Debug.Log("Tag of the object hit: " + hitTag);
+        // Forward Ray
+        if (Physics.Raycast(p1, center.transform.forward, out RaycastHit hitForward, raySize))
+        {
+            if (hitForward.collider.gameObject != this.gameObject)
+            {
+                string hitTagForward = hitForward.collider.gameObject.tag;
+                Debug.Log("Forward Ray Hit: " + hitTagForward);
+            }
         }
 
-        Debug.DrawRay(p1, center.transform.forward * 1.0f, Color.red);
+        // Backward Ray
+        if (Physics.Raycast(p1, -center.transform.forward, out RaycastHit hitBackward, raySize))
+        {
+            if (hitBackward.collider.gameObject != this.gameObject)
+            {
+                string hitTagBackward = hitBackward.collider.gameObject.tag;
+                Debug.Log("Backward Ray Hit: " + hitTagBackward);
+            }
+        }
+
+        // Left Ray
+        if (Physics.Raycast(p1, -center.transform.right, out RaycastHit hitLeft, raySize))
+        {
+            if (hitLeft.collider.gameObject != this.gameObject)
+            {
+                string hitTagLeft = hitLeft.collider.gameObject.tag;
+                Debug.Log("Left Ray Hit: " + hitTagLeft);
+            }
+        }
+
+        // Right Ray
+        if (Physics.Raycast(p1, center.transform.right, out RaycastHit hitRight, raySize))
+        {
+            if (hitRight.collider.gameObject != this.gameObject)
+            {
+                string hitTagRight = hitRight.collider.gameObject.tag;
+                Debug.Log("Right Ray Hit: " + hitTagRight);
+            }
+        }
+
+        // Debug Ray Visualization
+        Debug.DrawRay(p1, center.transform.forward * raySize, Color.red);
+        Debug.DrawRay(p1, -center.transform.forward * raySize, Color.blue);
+        Debug.DrawRay(p1, -center.transform.right * raySize, Color.green);
+        Debug.DrawRay(p1, center.transform.right * raySize, Color.yellow);
+
     }
 }
