@@ -17,9 +17,6 @@ public class BotInstantiator : MonoBehaviour
     public GameObject boxPrefab;
     [SerializeField] int boxAmount;
 
-    [Header("Storage box settings")]
-    public GameObject storagePrefab;
-    [SerializeField] int binAmount;
 
     Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>();
     void Start()
