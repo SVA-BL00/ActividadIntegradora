@@ -41,7 +41,8 @@ public class BotInstantiator : MonoBehaviour
     void BotSpawner(){
         for (int i = 0; i < botAmount; i++){
             GameObject currentbot = Instantiate(botPrefab);
-            RobotMovementManager currentBotScript = currentbot.GetComponent<RobotMovementManager>();
+            RobotMovementManager currentBotMove = currentbot.GetComponent<RobotMovementManager>();
+            RobotExtrasManager currentBotExtras = currentbot.GetComponent<RobotExtrasManager>();
 
             float velocity = Random.Range(minRange, maxRange);
             int colorStarter = Random.Range(0,2);
@@ -50,8 +51,11 @@ public class BotInstantiator : MonoBehaviour
             Vector3 position = positionFinder(currentbot.name);
             Quaternion rotation = rotationSet();
 
-            if (currentBotScript != null){
-                currentBotScript.Init(velocity, colorStarter, position, rotation);
+            if (currentBotExtras != null){
+                currentBotExtras.Init(colorStarter, position, rotation);
+            }
+            if (currentBotMove != null){
+                currentBotMove.Init(velocity);
             }
         }
     }

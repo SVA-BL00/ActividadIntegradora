@@ -284,6 +284,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 2562956014486076547}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6fbc63de62e4e2643abe07a4a9df39b7,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4294312389049971070}
   m_SourcePrefab: {fileID: 100100000, guid: 6fbc63de62e4e2643abe07a4a9df39b7, type: 3}
 --- !u!4 &8397139380699080549 stripped
 Transform:
@@ -333,8 +337,8 @@ MonoBehaviour:
   center: {fileID: 6881765728033726745}
   siren: {fileID: 6249896448019815422}
   randomColorStart: 0
-  velocity: 0
   sirenInterval: 1
+  RobotMovementManager: {fileID: 0}
 --- !u!54 &-4477316898315245879
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -405,3 +409,21 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -5523277661179574252, guid: 6fbc63de62e4e2643abe07a4a9df39b7, type: 3}
+--- !u!114 &-4294312389049971070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9206326764542066143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04cda4b4f5acca545ba0e974975fa3c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  velocity: 0
+  whatTouched: 
+  hitPoint: {x: 0, y: 0, z: 0}
+  isHit: 0
+  rotationSpeed: 1
+  animator: {fileID: 8140297775310559813}
