@@ -280,6 +280,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 2759209109834353995}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6fbc63de62e4e2643abe07a4a9df39b7,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2562956014486076547}
   m_SourcePrefab: {fileID: 100100000, guid: 6fbc63de62e4e2643abe07a4a9df39b7, type: 3}
 --- !u!4 &8397139380699080549 stripped
 Transform:
@@ -327,8 +331,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   center: {fileID: 6881765728033726745}
+  siren: {fileID: 6249896448019815422}
   randomColorStart: 0
   velocity: 0
+  sirenInterval: 1
 --- !u!54 &-4477316898315245879
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -352,10 +358,10 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
+  m_Constraints: 112
+  m_CollisionDetection: 1
 --- !u!65 &2759209109834353995
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -377,3 +383,25 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.84, y: 0.61, z: 0.86}
   m_Center: {x: 0, y: 0.77, z: 0}
+--- !u!64 &2562956014486076547
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9206326764542066143}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -5523277661179574252, guid: 6fbc63de62e4e2643abe07a4a9df39b7, type: 3}
