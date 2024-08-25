@@ -1,73 +1,78 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class RobotMovementManager : MonoBehaviour
 {
     Rigidbody botRigid;
     public float velocity;
-    private float distanceMoved = 0f;
-    public string whatTouched;
+    public float fixedDistance = 1f;
+    public float raySize = 1f;
     public Vector3 hitPoint;
+    [SerializeField] GameObject center;
     public bool isHit = false;
-    public float rotationSpeed = 1f;
-    private Quaternion targetRotation;
-    private bool isRotating = false;
-    private bool decision = false;
-    public Animator animator;
+    string whatTouched;
 
     public void Init(float _velocity){
         velocity = _velocity;
     }
 
-    void Start()
-    {
+    void Awake(){
         botRigid = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
-        targetRotation = transform.rotation;
     }
-
+    void Start(){
+        StartCoroutine(CheckHit());
+    }
     void FixedUpdate(){
-        if (isRotating && !decision)
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f){
-                transform.rotation = targetRotation;
-                isRotating = false;
-                isHit = false;
-                botRigid.velocity = Vector3.zero;
-                botRigid.angularVelocity = Vector3.zero;
-                decision = true;
-                animator.SetBool("hasObject", true);
-                DecisionHandler();
-            }
-        }else if (!decision){
-            float movement = velocity * Time.deltaTime;
-            distanceMoved += movement;
-            if (distanceMoved >= 0.5f){
-                float overshoot = distanceMoved - 0.5f;
-                movement -= overshoot;
-                distanceMoved = 0f;
-            }
-
-            botRigid.MovePosition(botRigid.position + transform.forward * movement);
-        }
+        Move();
+    }
+    void Move(){
+        botRigid.MovePosition(botRigid.position + transform.forward * Time.fixedDeltaTime * velocity);
     }
 
-    void Update()
-    {
-        if (isHit && !isRotating && !decision)
-        {
-            Vector3 direction = hitPoint - transform.position;
-            direction.y = 0;
+    IEnumerator CheckHit(){
+        while(true) {
+            Vector3 p1 = center.transform.position;
 
-            targetRotation = Quaternion.LookRotation(direction);
-            isRotating = true;
+            if (Physics.Raycast(p1, center.transform.forward, out RaycastHit hitForward, raySize)){
+                if (hitForward.collider.gameObject != this.gameObject){
+                    isHit = true;
+                    whatTouched = hitForward.collider.gameObject.tag;
+                    hitPoint = hitForward.point;
+                }
+            }
+
+            if (Physics.Raycast(p1, -center.transform.forward, out RaycastHit hitBackward, raySize)){
+                if (hitBackward.collider.gameObject != this.gameObject){
+                    isHit = true;
+                    whatTouched = hitBackward.collider.gameObject.tag;
+                    hitPoint = hitBackward.point;
+                }
+            }
+
+            if (Physics.Raycast(p1, -center.transform.right, out RaycastHit hitLeft, raySize)){
+                if (hitLeft.collider.gameObject != this.gameObject){
+                    isHit = true;
+                    whatTouched = hitLeft.collider.gameObject.tag;
+                    hitPoint = hitLeft.point;
+                }
+            }
+
+            if (Physics.Raycast(p1, center.transform.right, out RaycastHit hitRight, raySize)){
+                if (hitRight.collider.gameObject != this.gameObject){
+                    isHit = true;
+                    whatTouched = hitRight.collider.gameObject.tag;
+                    hitPoint = hitRight.point;
+                }
+            }
+
+            Debug.DrawRay(p1, center.transform.forward * raySize, Color.red);
+            Debug.DrawRay(p1, -center.transform.forward * raySize, Color.blue);
+            Debug.DrawRay(p1, -center.transform.right * raySize, Color.green);
+            Debug.DrawRay(p1, center.transform.right * raySize, Color.yellow);
+
+            yield return new WaitForSeconds(1f);
         }
-    }
-    void DecisionHandler(){
-        // Aquí es donde problablemente se llame el script para ver qué hace con lo que percibe
-        
     }
 }

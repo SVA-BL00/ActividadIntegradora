@@ -9,9 +9,9 @@ public class BotInstantiator : MonoBehaviour
     public GameObject botPrefab;
     [SerializeField] int botAmount;
     [Tooltip("Velocity min range")]
-    [SerializeField] float minRange = 0.3f;
+    [SerializeField] int minRange = 1;
     [Tooltip("Velocity max range")]
-    [SerializeField] float maxRange = 1.5f;
+    [SerializeField] int maxRange = 4;
     
     [Header("Box settings")]
     public GameObject boxPrefab;
