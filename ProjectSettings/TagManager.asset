@@ -6,8 +6,7 @@ TagManager:
   tags:
   - Bot
   - Wall
-  - Box
-  - Storage
+  - Object
   layers:
   - Default
   - TransparentFX

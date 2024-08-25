@@ -17,13 +17,25 @@ public class BotInstantiator : MonoBehaviour
     public GameObject boxPrefab;
     [SerializeField] int boxAmount;
 
+    [Header("Book settings")]
+    public GameObject bookPrefab;
+    [SerializeField] int bookAmount;
+
+    [Header("Kit settings")]
+    public GameObject kitPrefab;
+    [SerializeField] int kitAmount;
 
     Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>();
     void Start()
     {
         BotSpawner();
         BoxSpawner();
-        
+        BookSpawner();
+        KitSpawner();
+        foreach (var kvp in positionTracker)
+        {
+            Debug.Log($"Key: {kvp.Key}, Value: {kvp.Value}");
+        }
     }
 
     void BotSpawner(){
@@ -58,6 +70,34 @@ public class BotInstantiator : MonoBehaviour
             }
         }
     }
+    void BookSpawner(){
+        for (int i = 0; i < bookAmount; i++){
+            GameObject currentBook = Instantiate(bookPrefab);
+            BookPlacer currentBookScript = currentBook.GetComponent<BookPlacer>();
+            currentBook.name = "Book " + i;
+
+            Vector3 position = positionFinder(currentBook.name);
+            Quaternion rotation = rotationSet();
+
+            if (currentBookScript != null){
+                currentBookScript.Init(position, rotation);
+            }
+        }
+    }
+    void KitSpawner(){
+        for (int i = 0; i < kitAmount; i++){
+            GameObject currentKit = Instantiate(kitPrefab);
+            KitPlacer currentKitScript = currentKit.GetComponent<KitPlacer>();
+            currentKit.name = "Kit " + i;
+
+            Vector3 position = positionFinder(currentKit.name);
+            Quaternion rotation = rotationSet();
+
+            if (currentKitScript != null){
+                currentKitScript.Init(position, rotation);
+            }
+        }
+    }
     Vector3 positionFinder(string objectName){
         Vector3 position;
         do{
@@ -68,11 +108,10 @@ public class BotInstantiator : MonoBehaviour
             );
         }while(positionTracker.ContainsValue(position));
 
+        positionTracker.Add(objectName,position);
         if (objectName.StartsWith("Box")){
             position.y += 0.5f;
         }
-
-        positionTracker.Add(objectName,position);
         return position;
     }
 

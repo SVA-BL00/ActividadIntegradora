@@ -159,6 +159,12 @@ MonoBehaviour:
   boxPrefab: {fileID: 721293231352951289, guid: 1dd9ce1c6de2c8445a75b7fff7e291b3,
     type: 3}
   boxAmount: 9
+  bookPrefab: {fileID: 2507394125343254741, guid: 8202e5a0d6f6237408a65bdc5f7f8cdb,
+    type: 3}
+  bookAmount: 2
+  kitPrefab: {fileID: 3697433240865372561, guid: 12fae43b72a3b4c43af9519421135c8f,
+    type: 3}
+  kitAmount: 3
 --- !u!4 &220661882
 Transform:
   m_ObjectHideFlags: 0
@@ -232,9 +238,9 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
-  field of view: 60
+  near clip plane: 0.01
+  far clip plane: 22.85
+  field of view: 59.29385
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -260,13 +266,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.010017614, y: -0.98603374, z: 0.1532388, w: -0.06445958}
-  m_LocalPosition: {x: 0, y: 3.19, z: 5.52}
+  m_LocalRotation: {x: -0.0077983113, y: -0.9577012, z: 0.0492094, w: -0.28341854}
+  m_LocalPosition: {x: -8.62, y: 2.63, z: 6.04}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 17.512, y: -187.846, z: -2.374}
+  m_LocalEulerAnglesHint: {x: 5.663, y: -213.008, z: -0.746}
 --- !u!114 &330585547
 MonoBehaviour:
   m_ObjectHideFlags: 0
