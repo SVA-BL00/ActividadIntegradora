@@ -117,6 +117,16 @@ public class RobotMovementManager : MonoBehaviour
         transform.position = position;
         botRigid.position = position;
     }
+    void ClampRotation(){
+        Vector3 eulerRotation = transform.rotation.eulerAngles;
+        eulerRotation.y = Mathf.Round(eulerRotation.y / 90f) * 90f;
+
+        eulerRotation.x = 0f;
+        eulerRotation.z = 0f;
+        transform.rotation = Quaternion.Euler(eulerRotation);
+        botRigid.rotation = Quaternion.Euler(eulerRotation);
+    }
+
     void RotateToObject(){
         Vector3 direction = hitPoint - transform.position;
         direction.y = 0;
@@ -132,13 +142,15 @@ public class RobotMovementManager : MonoBehaviour
     void DecisionMaking(){
         switch(whatTouched){
             case "Object":
-                Debug.Log("enter switch");
+                if (!PUC.hasObject){
+                    PUC.PickUp();
+                    ClampPosition();
+                    ClampRotation();
+                    velocity = tempVelocity;
+                    isHit = false;
+                    StartCoroutine(CheckHit());
+                }
                 //Podemos cambiar esto despues
-                PUC.PickUp();
-                ClampPosition();
-                velocity = tempVelocity;
-                isHit = false;
-                StartCoroutine(CheckHit());
                 break;
             case "Wall":
                 break;

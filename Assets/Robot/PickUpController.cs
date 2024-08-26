@@ -5,7 +5,7 @@ using UnityEngine;
 public class PickUpController : MonoBehaviour
 {
     [SerializeField] GameObject CarryPlace;
-    bool hasObject;
+    public bool hasObject;
     private RobotMovementManager RMM;
     void Start()
     {
