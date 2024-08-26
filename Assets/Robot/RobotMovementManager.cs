@@ -1,73 +1,137 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class RobotMovementManager : MonoBehaviour
 {
     Rigidbody botRigid;
     public float velocity;
-    private float distanceMoved = 0f;
-    public string whatTouched;
+    public float tempVelocity;
+    public float fixedDistance = 1f;
+    public float raySize = 1f;
     public Vector3 hitPoint;
-    public bool isHit = false;
-    public float rotationSpeed = 1f;
     private Quaternion targetRotation;
-    private bool isRotating = false;
-    private bool decision = false;
-    public Animator animator;
+    [SerializeField] GameObject center;
+    public bool isHit = false;
+    string whatTouched;
+    private float waitSecond;
 
     public void Init(float _velocity){
         velocity = _velocity;
+        tempVelocity = _velocity;
     }
 
-    void Start()
-    {
+    void Awake(){
         botRigid = GetComponent<Rigidbody>();
-        animator = GetComponent<Animator>();
-        targetRotation = transform.rotation;
     }
-
+    void Start(){
+        waitSecond = 1 / velocity;
+        StartCoroutine(CheckHit());
+    }
     void FixedUpdate(){
-        if (isRotating && !decision)
-        {
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        HitHandler();
+        Move();
+    }
+    void Move(){
+        botRigid.MovePosition(botRigid.position + transform.forward * Time.fixedDeltaTime * velocity);
+    }
 
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f){
-                transform.rotation = targetRotation;
-                isRotating = false;
-                isHit = false;
-                botRigid.velocity = Vector3.zero;
-                botRigid.angularVelocity = Vector3.zero;
-                decision = true;
-                animator.SetBool("hasObject", true);
-                DecisionHandler();
-            }
-        }else if (!decision){
-            float movement = velocity * Time.deltaTime;
-            distanceMoved += movement;
-            if (distanceMoved >= 0.5f){
-                float overshoot = distanceMoved - 0.5f;
-                movement -= overshoot;
-                distanceMoved = 0f;
+    void HitHandler(){
+        if(isHit){
+            velocity = 0;
+            ClampPosition();
+            RotateToObject();
+        }
+    }
+    IEnumerator CheckHit(){
+        while(true) {
+            Vector3 p1 = center.transform.position;
+
+            if (Physics.Raycast(p1, center.transform.forward, out RaycastHit hitForward, raySize)){
+                if (hitForward.collider.gameObject != this.gameObject){
+                    whatTouched = hitForward.collider.gameObject.tag;
+                    hitPoint = hitForward.point;
+                    isHit = true;
+                    yield break;
+                }
             }
 
-            botRigid.MovePosition(botRigid.position + transform.forward * movement);
+            if (Physics.Raycast(p1, -center.transform.forward, out RaycastHit hitBackward, raySize)){
+                if (hitBackward.collider.gameObject != this.gameObject){
+                    whatTouched = hitBackward.collider.gameObject.tag;
+                    hitPoint = hitBackward.point;
+                    isHit = true;
+                    yield break;
+                }
+            }
+
+            if (Physics.Raycast(p1, -center.transform.right, out RaycastHit hitLeft, raySize)){
+                if (hitLeft.collider.gameObject != this.gameObject){
+                    whatTouched = hitLeft.collider.gameObject.tag;
+                    hitPoint = hitLeft.point;
+                    isHit = true;
+                    yield break;
+                }
+            }
+
+            if (Physics.Raycast(p1, center.transform.right, out RaycastHit hitRight, raySize)){
+                if (hitRight.collider.gameObject != this.gameObject){
+                    whatTouched = hitRight.collider.gameObject.tag;
+                    hitPoint = hitRight.point;
+                    isHit = true;
+                    yield break;
+                }
+            }
+
+            Debug.DrawRay(p1, center.transform.forward * raySize, Color.red);
+            Debug.DrawRay(p1, -center.transform.forward * raySize, Color.blue);
+            Debug.DrawRay(p1, -center.transform.right * raySize, Color.green);
+            Debug.DrawRay(p1, center.transform.right * raySize, Color.yellow);
+
+            yield return new WaitForSeconds(waitSecond);
+        }
+    }
+    void ClampPosition(){
+        Vector3 position = transform.position;
+
+        position.x = Mathf.Round(position.x * 2) / 2f;
+        position.z = Mathf.Round(position.z * 2) / 2f;
+
+        if (position.x % 1 == 0){
+            position.x += 0.5f;
+        }
+        if (position.z % 1 == 0){
+            position.z += 0.5f;
+        }
+
+        transform.position = position;
+        botRigid.position = position;
+    }
+    void RotateToObject(){
+        Vector3 direction = hitPoint - transform.position;
+        direction.y = 0;
+
+        targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
+
+        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f){
+            transform.rotation = targetRotation;
+            DecisionMaking();
+        }
+    }
+    void DecisionMaking(){
+        switch(whatTouched){
+            case "Object":
+                break;
+            case "Wall":
+                break;
+            case "Bot":
+                break;
+            default:
+                break;
         }
     }
 
-    void Update()
-    {
-        if (isHit && !isRotating && !decision)
-        {
-            Vector3 direction = hitPoint - transform.position;
-            direction.y = 0;
-
-            targetRotation = Quaternion.LookRotation(direction);
-            isRotating = true;
-        }
-    }
-    void DecisionHandler(){
-        // Aquí es donde problablemente se llame el script para ver qué hace con lo que percibe
-        
-    }
 }
