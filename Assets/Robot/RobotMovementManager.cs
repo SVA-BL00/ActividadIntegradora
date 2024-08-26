@@ -7,6 +7,7 @@ public class RobotMovementManager : MonoBehaviour
 {
     Rigidbody botRigid;
     public float velocity;
+    public float tempVelocity;
     public float fixedDistance = 1f;
     public float raySize = 1f;
     public Vector3 hitPoint;
@@ -16,6 +17,7 @@ public class RobotMovementManager : MonoBehaviour
 
     public void Init(float _velocity){
         velocity = _velocity;
+        tempVelocity = _velocity;
     }
 
     void Awake(){
@@ -25,12 +27,19 @@ public class RobotMovementManager : MonoBehaviour
         StartCoroutine(CheckHit());
     }
     void FixedUpdate(){
+        HitHandler();
         Move();
     }
     void Move(){
         botRigid.MovePosition(botRigid.position + transform.forward * Time.fixedDeltaTime * velocity);
     }
 
+    void HitHandler(){
+        if(isHit){
+            velocity = 0;
+            //ClampPosition();
+        }
+    }
     IEnumerator CheckHit(){
         while(true) {
             Vector3 p1 = center.transform.position;
