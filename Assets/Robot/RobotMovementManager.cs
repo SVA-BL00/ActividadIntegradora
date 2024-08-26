@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -15,6 +16,7 @@ public class RobotMovementManager : MonoBehaviour
     [SerializeField] GameObject center;
     public bool isHit = false;
     string whatTouched;
+    private float waitSecond;
 
     public void Init(float _velocity){
         velocity = _velocity;
@@ -25,6 +27,7 @@ public class RobotMovementManager : MonoBehaviour
         botRigid = GetComponent<Rigidbody>();
     }
     void Start(){
+        waitSecond = 1 / velocity;
         StartCoroutine(CheckHit());
     }
     void FixedUpdate(){
@@ -87,7 +90,7 @@ public class RobotMovementManager : MonoBehaviour
             Debug.DrawRay(p1, -center.transform.right * raySize, Color.green);
             Debug.DrawRay(p1, center.transform.right * raySize, Color.yellow);
 
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(waitSecond);
         }
     }
     void ClampPosition(){
@@ -115,6 +118,19 @@ public class RobotMovementManager : MonoBehaviour
 
         if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f){
             transform.rotation = targetRotation;
+            DecisionMaking();
+        }
+    }
+    void DecisionMaking(){
+        switch(whatTouched){
+            case "Object":
+                break;
+            case "Wall":
+                break;
+            case "Bot":
+                break;
+            default:
+                break;
         }
     }
 
