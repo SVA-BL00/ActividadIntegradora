@@ -11,6 +11,7 @@ public class RobotMovementManager : MonoBehaviour
     public float fixedDistance = 1f;
     public float raySize = 1f;
     public Vector3 hitPoint;
+    private Quaternion targetRotation;
     [SerializeField] GameObject center;
     public bool isHit = false;
     string whatTouched;
@@ -37,7 +38,8 @@ public class RobotMovementManager : MonoBehaviour
     void HitHandler(){
         if(isHit){
             velocity = 0;
-            //ClampPosition();
+            ClampPosition();
+            RotateToObject();
         }
     }
     IEnumerator CheckHit(){
@@ -46,33 +48,37 @@ public class RobotMovementManager : MonoBehaviour
 
             if (Physics.Raycast(p1, center.transform.forward, out RaycastHit hitForward, raySize)){
                 if (hitForward.collider.gameObject != this.gameObject){
-                    isHit = true;
                     whatTouched = hitForward.collider.gameObject.tag;
                     hitPoint = hitForward.point;
+                    isHit = true;
+                    yield break;
                 }
             }
 
             if (Physics.Raycast(p1, -center.transform.forward, out RaycastHit hitBackward, raySize)){
                 if (hitBackward.collider.gameObject != this.gameObject){
-                    isHit = true;
                     whatTouched = hitBackward.collider.gameObject.tag;
                     hitPoint = hitBackward.point;
+                    isHit = true;
+                    yield break;
                 }
             }
 
             if (Physics.Raycast(p1, -center.transform.right, out RaycastHit hitLeft, raySize)){
                 if (hitLeft.collider.gameObject != this.gameObject){
-                    isHit = true;
                     whatTouched = hitLeft.collider.gameObject.tag;
                     hitPoint = hitLeft.point;
+                    isHit = true;
+                    yield break;
                 }
             }
 
             if (Physics.Raycast(p1, center.transform.right, out RaycastHit hitRight, raySize)){
                 if (hitRight.collider.gameObject != this.gameObject){
-                    isHit = true;
                     whatTouched = hitRight.collider.gameObject.tag;
                     hitPoint = hitRight.point;
+                    isHit = true;
+                    yield break;
                 }
             }
 
@@ -84,4 +90,32 @@ public class RobotMovementManager : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
     }
+    void ClampPosition(){
+        Vector3 position = transform.position;
+
+        position.x = Mathf.Round(position.x * 2) / 2f;
+        position.z = Mathf.Round(position.z * 2) / 2f;
+
+        if (position.x % 1 == 0){
+            position.x += 0.5f;
+        }
+        if (position.z % 1 == 0){
+            position.z += 0.5f;
+        }
+
+        transform.position = position;
+        botRigid.position = position;
+    }
+    void RotateToObject(){
+        Vector3 direction = hitPoint - transform.position;
+        direction.y = 0;
+
+        targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
+
+        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f){
+            transform.rotation = targetRotation;
+        }
+    }
+
 }
