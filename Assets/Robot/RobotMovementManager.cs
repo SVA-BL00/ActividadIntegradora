@@ -15,8 +15,10 @@ public class RobotMovementManager : MonoBehaviour
     private Quaternion targetRotation;
     [SerializeField] GameObject center;
     public bool isHit = false;
-    string whatTouched;
+    public string whatTouched;
     private float waitSecond;
+    public string objectRecognized = "Unknown";
+    private PickUpController PUC;
 
     public void Init(float _velocity){
         velocity = _velocity;
@@ -25,6 +27,7 @@ public class RobotMovementManager : MonoBehaviour
 
     void Awake(){
         botRigid = GetComponent<Rigidbody>();
+        PUC = GetComponent<PickUpController>();
     }
     void Start(){
         waitSecond = 1 / velocity;
@@ -53,6 +56,8 @@ public class RobotMovementManager : MonoBehaviour
                 if (hitForward.collider.gameObject != this.gameObject){
                     whatTouched = hitForward.collider.gameObject.tag;
                     hitPoint = hitForward.point;
+                    objectRecognized = hitForward.collider.gameObject.name;
+                    Debug.Log(objectRecognized);
                     isHit = true;
                     yield break;
                 }
@@ -62,6 +67,7 @@ public class RobotMovementManager : MonoBehaviour
                 if (hitBackward.collider.gameObject != this.gameObject){
                     whatTouched = hitBackward.collider.gameObject.tag;
                     hitPoint = hitBackward.point;
+                    objectRecognized = hitBackward.collider.gameObject.name;
                     isHit = true;
                     yield break;
                 }
@@ -71,6 +77,7 @@ public class RobotMovementManager : MonoBehaviour
                 if (hitLeft.collider.gameObject != this.gameObject){
                     whatTouched = hitLeft.collider.gameObject.tag;
                     hitPoint = hitLeft.point;
+                    objectRecognized = hitLeft.collider.gameObject.name;
                     isHit = true;
                     yield break;
                 }
@@ -80,6 +87,7 @@ public class RobotMovementManager : MonoBehaviour
                 if (hitRight.collider.gameObject != this.gameObject){
                     whatTouched = hitRight.collider.gameObject.tag;
                     hitPoint = hitRight.point;
+                    objectRecognized = hitRight.collider.gameObject.name;
                     isHit = true;
                     yield break;
                 }
@@ -109,6 +117,16 @@ public class RobotMovementManager : MonoBehaviour
         transform.position = position;
         botRigid.position = position;
     }
+    void ClampRotation(){
+        Vector3 eulerRotation = transform.rotation.eulerAngles;
+        eulerRotation.y = Mathf.Round(eulerRotation.y / 90f) * 90f;
+
+        eulerRotation.x = 0f;
+        eulerRotation.z = 0f;
+        transform.rotation = Quaternion.Euler(eulerRotation);
+        botRigid.rotation = Quaternion.Euler(eulerRotation);
+    }
+
     void RotateToObject(){
         Vector3 direction = hitPoint - transform.position;
         direction.y = 0;
@@ -116,7 +134,7 @@ public class RobotMovementManager : MonoBehaviour
         targetRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
 
-        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.1f){
+        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.05f){
             transform.rotation = targetRotation;
             DecisionMaking();
         }
@@ -124,6 +142,15 @@ public class RobotMovementManager : MonoBehaviour
     void DecisionMaking(){
         switch(whatTouched){
             case "Object":
+                if (!PUC.hasObject){
+                    PUC.PickUp();
+                    ClampPosition();
+                    ClampRotation();
+                    velocity = tempVelocity;
+                    isHit = false;
+                    StartCoroutine(CheckHit());
+                }
+                //Podemos cambiar esto despues
                 break;
             case "Wall":
                 break;
