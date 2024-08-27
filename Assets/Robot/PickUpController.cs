@@ -20,10 +20,7 @@ public class PickUpController : MonoBehaviour
     }
 
     public void PickUp(){
-        Debug.Log("Pick up called");
-        hasObject = true;
         string objectPickUp = RMM.objectRecognized;
-        Debug.Log(objectPickUp);
         GameObject foundObject = GameObject.Find(objectPickUp);
         
         Rigidbody foundRB = foundObject.GetComponent<Rigidbody>();
@@ -32,5 +29,9 @@ public class PickUpController : MonoBehaviour
         foundObject.transform.SetParent(CarryPlace.transform);
         foundObject.transform.localPosition = Vector3.zero;
         foundObject.transform.localRotation = Quaternion.identity;
+        
+        if (foundObject.transform.parent == CarryPlace.transform){
+            hasObject = true;
+        }
     }
 }

@@ -25,7 +25,7 @@ public class BotInstantiator : MonoBehaviour
     public GameObject kitPrefab;
     [SerializeField] int kitAmount;
 
-    Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>();
+    Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>(); //tambien mandar esto
     void Start()
     {
         BotSpawner();

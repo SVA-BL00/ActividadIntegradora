@@ -191,17 +191,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 6fbc63de62e4e2643abe07a4a9df39b7,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.6080832
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6fbc63de62e4e2643abe07a4a9df39b7,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.002521038
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6fbc63de62e4e2643abe07a4a9df39b7,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.463228
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6fbc63de62e4e2643abe07a4a9df39b7,
         type: 3}
@@ -472,9 +472,10 @@ MonoBehaviour:
   raySize: 1
   hitPoint: {x: 0, y: 0, z: 0}
   center: {fileID: 6881765728033726745}
-  isHit: 0
   whatTouched: 
   objectRecognized: 
+  hasObject: 0
+  ID: 
 --- !u!114 &2789243114021940922
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -488,3 +489,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CarryPlace: {fileID: 262110395075106263}
+  hasObject: 0
