@@ -24,8 +24,8 @@ public class RobotMovementManager : MonoBehaviour
     {
         Vector3.right,    // N
         -Vector3.right,   // S
-        -Vector3.forward, // W
-        Vector3.forward   // E
+        Vector3.forward, // W
+        -Vector3.forward   // E
     };
     string[] directionLabels = new string[] { "N", "S", "W", "E" };
 
@@ -63,22 +63,13 @@ public class RobotMovementManager : MonoBehaviour
         //     case "MoveForward":
         //         Move();
         //         break;
-        //     case "RotateN":
-        //     case "RotateS":
-        //     case "RotateE":
-        //     case "RotateW":
         //     case "Grab":
         //     case "Drop":
+        //     case "Turn":
         //         velocity = 0;
         //         ClampPosition();
-        //         if(function.StartsWith("Rotate")){
-        //             switch(function){
-        //                 case "RotateN": Rotate(Vector3.right); break;
-        //                 case "RotateS": Rotate(-Vector3.right); break;
-        //                 case "RotateW": Rotate(-Vector3.forward); break;
-        //                 case "RotateE": Rotate(Vector3.forward); break;
-        //             }
-                        
+        //         if(function == "Turn")){
+        //            Turn();
         //         }else if(function == "Grab"){
         //             Grab();
         //         }else if(function == "Drop"){
@@ -97,9 +88,14 @@ public class RobotMovementManager : MonoBehaviour
         Vector3 p1 = center.transform.position;
         var hitResults = new List<(string direction, string objectLabel)>();
 
-        for (int i = 0; i < directions.Length; i++){
-            if (Physics.Raycast(p1, center.transform.TransformDirection(directions[i]), out RaycastHit hit, raySize)){
-                if (hit.collider.gameObject != this.gameObject){
+        string rotationDirection = GetRotation();
+        Debug.Log(rotationDirection);
+
+        for(int i = 0; i < directions.Length; i++){
+            Vector3 adjustedDirection = GetAdjustedDirection(directions[i], rotationDirection);
+            
+            if(Physics.Raycast(p1, center.transform.TransformDirection(adjustedDirection), out RaycastHit hit, raySize)){
+                if(hit.collider.gameObject != this.gameObject){
                     whatTouched = hit.collider.gameObject.tag;
                     hitPoint = hit.point;
                     objectRecognized = hit.collider.gameObject.name;
@@ -109,19 +105,34 @@ public class RobotMovementManager : MonoBehaviour
                 hitResults.Add((directionLabels[i], "0"));
             }
         }
+
         resultTuple = hitResults.ToArray();
         JSONpy toPython = new JSONpy(ID, transform.position, GetRotation(), resultTuple);
 
-        Debug.DrawRay(p1, center.transform.forward * raySize, Color.red);
-        Debug.DrawRay(p1, -center.transform.forward * raySize, Color.blue);
-        Debug.DrawRay(p1, -center.transform.right * raySize, Color.green);
-        Debug.DrawRay(p1, center.transform.right * raySize, Color.yellow);
+        // Debugging raycasts
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.forward) * raySize, Color.red);
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.back) * raySize, Color.blue);
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.right) * raySize, Color.green);
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.left) * raySize, Color.yellow);
 
-        for (int i = 0; i < resultTuple.Length; i++){
+        for (int i = 0; i < resultTuple.Length; i++) {
             Debug.Log($"{resultTuple[i].direction},{resultTuple[i].objectLabel}");
         }
-        
-    }   
+    }
+    Vector3 GetAdjustedDirection(Vector3 direction, string rotationDirection){
+        switch(rotationDirection){
+            case "E": //
+                return new Vector3(-direction.x, direction.y, -direction.z);
+            case "N": //
+                return new Vector3(-direction.z, direction.y, direction.x);
+            case "W":
+                return direction;
+            case "S": //
+                return new Vector3(direction.z, direction.y, -direction.x);
+            default:
+                return direction;
+        }
+    }
 
     void ClampPosition(){
         Vector3 position = transform.position;
@@ -158,8 +169,23 @@ public class RobotMovementManager : MonoBehaviour
         }
     }
     
-    void Rotate(Vector3 _direction){
-        targetRotation = Quaternion.LookRotation(_direction);
+    void Turn(){
+        Vector3 holderDir = Vector3.zero;
+        switch(GetRotation()){
+            case "N":
+                holderDir = Vector3.forward;
+                break;
+            case "E":
+                holderDir = -Vector3.right; // South
+                break;
+            case "S":
+                holderDir = -Vector3.forward; // West
+                break;
+            case "W":
+                holderDir = Vector3.right; // North
+                break;
+        }
+        targetRotation = Quaternion.LookRotation(holderDir);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
 
         if (Quaternion.Angle(transform.rotation, targetRotation) < 0.05f){
@@ -173,14 +199,15 @@ public class RobotMovementManager : MonoBehaviour
     }
     string GetRotation(){
         float yRotation = transform.eulerAngles.y;
-        yRotation = (yRotation + 360f) % 360f;
-        if (yRotation >= 315f || yRotation < 45f)
-            return "E";
-        if (yRotation >= 45f && yRotation < 135f)
-            return "N";
-        if (yRotation >= 135f && yRotation < 225f)
+        yRotation = (yRotation + 360f) % 360f;  // Normalize to 0-360 range
+
+        if (yRotation > 315f || yRotation <= 45f)
             return "W";
-        if (yRotation >= 225f && yRotation < 315f)
+        if (yRotation > 45f && yRotation <= 135f)
+            return "N";
+        if (yRotation > 135f && yRotation <= 225f)
+            return "E";
+        if (yRotation > 225f && yRotation <= 315f)
             return "S";
 
         return "Not valid";
