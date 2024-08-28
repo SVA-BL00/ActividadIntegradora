@@ -22,6 +22,7 @@ public class RobotMovementManager : MonoBehaviour
 
     public int stepsForBot = 0;
     public BotInstantiator BIS;
+    public JSONpy toPython;
 
     Vector3[] directions = new Vector3[] 
     {
@@ -93,7 +94,6 @@ public class RobotMovementManager : MonoBehaviour
         var hitResults = new List<(string direction, string objectLabel)>();
 
         string rotationDirection = GetRotation();
-        Debug.Log(rotationDirection);
 
         for(int i = 0; i < directions.Length; i++){
             Vector3 adjustedDirection = GetAdjustedDirection(directions[i], rotationDirection);
@@ -101,6 +101,9 @@ public class RobotMovementManager : MonoBehaviour
             if(Physics.Raycast(p1, center.transform.TransformDirection(adjustedDirection), out RaycastHit hit, raySize)){
                 if(hit.collider.gameObject != this.gameObject){
                     whatTouched = hit.collider.gameObject.tag;
+                    if(whatTouched == "Bot"){
+                        whatTouched = "0";
+                    }
                     hitPoint = hit.point;
                     objectRecognized = hit.collider.gameObject.name;
                     hitResults.Add((directionLabels[i], whatTouched));
@@ -112,9 +115,7 @@ public class RobotMovementManager : MonoBehaviour
 
         resultTuple = hitResults.ToArray();
         string res = ConvertResultTupleToString();
-        JSONpy toPython = new JSONpy(ID, GetRotation(), res, hasObject, CompletedScene());
-        string json = EditorJsonUtility.ToJson(toPython);
-        Debug.Log(json);
+        toPython = new JSONpy(ID, GetRotation(), res, hasObject, CompletedScene());
 
         // Debugging raycasts
         Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.forward) * raySize, Color.red);
