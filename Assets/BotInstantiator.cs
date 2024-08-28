@@ -54,7 +54,9 @@ public class BotInstantiator : MonoBehaviour
         new Vector3(-1.5f,0,5.5f),
         new Vector3(-0.5f,0,5.5f),
     }; 
-
+    public float timer = 20f;
+    public int totalPlaced = 0;
+    public int initialPlaced = 0;
     Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>(); //tambien mandar esto
     void Start()
     {
@@ -63,9 +65,14 @@ public class BotInstantiator : MonoBehaviour
         BoxSpawner();
         BookSpawner();
         KitSpawner();
-        foreach (var kvp in positionTracker)
-        {
-            Debug.Log($"Key: {kvp.Key}, Value: {kvp.Value}");
+        
+    }
+
+    void FixedUpdate(){
+        if(timer > 0){
+            timer -= Time.deltaTime;
+        }else{
+            Debug.Log("STOP");
         }
     }
 
@@ -108,6 +115,7 @@ public class BotInstantiator : MonoBehaviour
             if (currentBoxScript != null){
                 currentBoxScript.Init(position, rotation);
             }
+            initialPlaced++;
         }
     }
     void BookSpawner(){
@@ -122,6 +130,7 @@ public class BotInstantiator : MonoBehaviour
             if (currentBookScript != null){
                 currentBookScript.Init(position, rotation);
             }
+            initialPlaced++;
         }
     }
     void KitSpawner(){
@@ -136,6 +145,7 @@ public class BotInstantiator : MonoBehaviour
             if (currentKitScript != null){
                 currentKitScript.Init(position, rotation);
             }
+            initialPlaced++;
         }
     }
     Vector3 positionFinder(string objectName){

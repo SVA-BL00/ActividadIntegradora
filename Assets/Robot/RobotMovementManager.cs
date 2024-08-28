@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 public class RobotMovementManager : MonoBehaviour
@@ -19,6 +20,8 @@ public class RobotMovementManager : MonoBehaviour
     public string objectRecognized = "Unknown";
     private PickUpController PUC;
 
+    public int stepsForBot = 0;
+    public BotInstantiator BIS;
 
     Vector3[] directions = new Vector3[] 
     {
@@ -39,6 +42,8 @@ public class RobotMovementManager : MonoBehaviour
 
     void Awake(){
         botRigid = GetComponent<Rigidbody>();
+        GameObject instantiatorObject = GameObject.Find("Instantiator");
+        BIS = instantiatorObject.GetComponent<BotInstantiator>();
         PUC = GetComponent<PickUpController>();
     }
     void Start(){
@@ -46,17 +51,15 @@ public class RobotMovementManager : MonoBehaviour
         waitSecond = 1 / velocity;
         StartCoroutine(CheckHit());
     }
-    void FixedUpdate(){
-        HitHandler();
-    }
     void Move(){
         if(velocity != tempVelocity){
             velocity = tempVelocity;
         }
-        botRigid.MovePosition(botRigid.position + transform.forward * Time.fixedDeltaTime * velocity);
+        botRigid.MovePosition(botRigid.position + transform.forward);
     }
 
     void HitHandler(){
+        PerformRaycast();
         // DEPENDE QUÉ RETORNE PYTHON!!!!!
         // string function = pythonscript.choice()
         // switch(function){
@@ -80,7 +83,8 @@ public class RobotMovementManager : MonoBehaviour
     }
     IEnumerator CheckHit(){
         while(true){
-            PerformRaycast();
+            HitHandler();
+            stepsForBot ++;
             yield return new WaitForSeconds(waitSecond);
         }
     }
@@ -107,7 +111,10 @@ public class RobotMovementManager : MonoBehaviour
         }
 
         resultTuple = hitResults.ToArray();
-        JSONpy toPython = new JSONpy(ID, transform.position, GetRotation(), resultTuple);
+        string res = ConvertResultTupleToString();
+        JSONpy toPython = new JSONpy(ID, GetRotation(), res, hasObject, CompletedScene());
+        string json = EditorJsonUtility.ToJson(toPython);
+        Debug.Log(json);
 
         // Debugging raycasts
         Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.forward) * raySize, Color.red);
@@ -115,9 +122,6 @@ public class RobotMovementManager : MonoBehaviour
         Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.right) * raySize, Color.green);
         Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.left) * raySize, Color.yellow);
 
-        for (int i = 0; i < resultTuple.Length; i++) {
-            Debug.Log($"{resultTuple[i].direction},{resultTuple[i].objectLabel}");
-        }
     }
     Vector3 GetAdjustedDirection(Vector3 direction, string rotationDirection){
         switch(rotationDirection){
@@ -168,29 +172,20 @@ public class RobotMovementManager : MonoBehaviour
             ClampRotation();
         }
     }
+    void Drop(){
+        PUC.Drop();
+        hasObject = PUC.hasObject;
+        ClampPosition();
+        ClampRotation();
+    }
     
     void Turn(){
-        Vector3 holderDir = Vector3.zero;
-        switch(GetRotation()){
-            case "N":
-                holderDir = Vector3.forward;
-                break;
-            case "E":
-                holderDir = -Vector3.right; // South
-                break;
-            case "S":
-                holderDir = -Vector3.forward; // West
-                break;
-            case "W":
-                holderDir = Vector3.right; // North
-                break;
-        }
-        targetRotation = Quaternion.LookRotation(holderDir);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
+        float currentYRotation = transform.eulerAngles.y;
+        Quaternion targetRotation = Quaternion.Euler(0, currentYRotation + 90f, 0);
 
-        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.05f){
-            transform.rotation = targetRotation;
-        }
+        transform.rotation = targetRotation;
+        botRigid.rotation = targetRotation;
+
         ClampRotation();
     }
     string GetID(string name){
@@ -212,4 +207,23 @@ public class RobotMovementManager : MonoBehaviour
 
         return "Not valid";
     }
+
+    bool CompletedScene(){
+        if(BIS.initialPlaced != BIS.totalPlaced){
+            return false;
+        }
+        return true;
+    }
+    public string ConvertResultTupleToString(){
+        if (resultTuple == null || resultTuple.Length == 0)
+            return "No results available";
+        List<string> formattedResults = new List<string>();
+
+        foreach (var tuple in resultTuple)
+        {
+            formattedResults.Add($"Direction: {tuple.direction}, Object: {tuple.objectLabel}");
+        }
+        return string.Join("; ", formattedResults);
+    }
+
 }

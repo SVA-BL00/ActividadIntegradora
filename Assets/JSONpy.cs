@@ -6,14 +6,16 @@ using UnityEngine;
 
 [Serializable]
 public struct JSONpy{
-    string ID;
-    public Vector3 position;
+    public string ID;
     public string rotation;
-    public (string direction, string objectLabel)[] resultTuple;
-    public JSONpy(string _ID,Vector3 _position, string _rotation, (string, string)[] _resultTuple){
+    public string resultTuple;
+    public bool hasObject;
+    public bool isDone;
+    public JSONpy(string _ID, string _rotation, string _resultTuple, bool _hasObject, bool _isDone){
         ID = _ID;
-        position = _position;
         rotation = _rotation;
         resultTuple = _resultTuple;
+        hasObject = _hasObject;
+        isDone = _isDone;
     }
 }
