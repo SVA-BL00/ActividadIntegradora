@@ -24,20 +24,63 @@ public class BotInstantiator : MonoBehaviour
     [Header("Kit settings")]
     public GameObject kitPrefab;
     [SerializeField] int kitAmount;
+    Vector3[] positionShelf = new Vector3[] 
+    {
+        new Vector3(9.5f,0,6.5f),
+        new Vector3(9.5f,0,5.5f),
+        new Vector3(9.5f,0,4.5f),
+        new Vector3(8.5f,0,6.5f),
+        new Vector3(8.5f,0,5.5f),
+        new Vector3(8.5f,0,4.5f),
 
-    Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>();
+        new Vector3(6.5f,0,-6.5f),
+        new Vector3(5.5f,0,-6.5f),
+        new Vector3(4.5f,0,-6.5f),
+        new Vector3(6.5f,0,-5.5f),
+        new Vector3(5.5f,0,-5.5f),
+        new Vector3(4.5f,0,-5.5f),
+
+        new Vector3(-7.5f,0,-5.5f),
+        new Vector3(-8.5f,0,-5.5f),
+        new Vector3(-9.5f,0,-5.5f),
+        new Vector3(-7.5f,0,-6.5f),
+        new Vector3(-8.5f,0,-6.5f),
+        new Vector3(-9.5f,0,-6.5f),
+        
+        new Vector3(-2.5f,0,6.5f),
+        new Vector3(-1.5f,0,6.5f),
+        new Vector3(-0.5f,0,6.5f),
+        new Vector3(-2.5f,0,5.5f),
+        new Vector3(-1.5f,0,5.5f),
+        new Vector3(-0.5f,0,5.5f),
+    }; 
+    public float timer = 20f;
+    public int totalPlaced = 0;
+    public int initialPlaced = 0;
+    Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>(); //tambien mandar esto
     void Start()
     {
+        ShelfSpawner();
         BotSpawner();
         BoxSpawner();
         BookSpawner();
         KitSpawner();
-        foreach (var kvp in positionTracker)
-        {
-            Debug.Log($"Key: {kvp.Key}, Value: {kvp.Value}");
+        
+    }
+
+    void FixedUpdate(){
+        if(timer > 0){
+            timer -= Time.deltaTime;
+        }else{
+            Debug.Log("STOP");
         }
     }
 
+    void ShelfSpawner(){
+        for(int i = 0; i < positionShelf.Length; i++){
+            positionTracker.Add("Shelf " + i,positionShelf[i]);
+        }
+    }
     void BotSpawner(){
         for (int i = 0; i < botAmount; i++){
             GameObject currentbot = Instantiate(botPrefab);
@@ -72,6 +115,7 @@ public class BotInstantiator : MonoBehaviour
             if (currentBoxScript != null){
                 currentBoxScript.Init(position, rotation);
             }
+            initialPlaced++;
         }
     }
     void BookSpawner(){
@@ -86,6 +130,7 @@ public class BotInstantiator : MonoBehaviour
             if (currentBookScript != null){
                 currentBookScript.Init(position, rotation);
             }
+            initialPlaced++;
         }
     }
     void KitSpawner(){
@@ -100,6 +145,7 @@ public class BotInstantiator : MonoBehaviour
             if (currentKitScript != null){
                 currentKitScript.Init(position, rotation);
             }
+            initialPlaced++;
         }
     }
     Vector3 positionFinder(string objectName){

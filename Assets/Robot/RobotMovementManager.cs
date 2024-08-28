@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 
 public class RobotMovementManager : MonoBehaviour
@@ -14,12 +15,26 @@ public class RobotMovementManager : MonoBehaviour
     public Vector3 hitPoint;
     private Quaternion targetRotation;
     [SerializeField] GameObject center;
-    public bool isHit = false;
     public string whatTouched;
     private float waitSecond;
     public string objectRecognized = "Unknown";
     private PickUpController PUC;
 
+    public int stepsForBot = 0;
+    public BotInstantiator BIS;
+
+    Vector3[] directions = new Vector3[] 
+    {
+        Vector3.right,    // N
+        -Vector3.right,   // S
+        Vector3.forward, // W
+        -Vector3.forward   // E
+    };
+    string[] directionLabels = new string[] { "N", "S", "W", "E" };
+
+    public (string direction, string objectLabel)[] resultTuple;
+    public bool hasObject = false;
+    public string ID;
     public void Init(float _velocity){
         velocity = _velocity;
         tempVelocity = _velocity;
@@ -27,80 +42,102 @@ public class RobotMovementManager : MonoBehaviour
 
     void Awake(){
         botRigid = GetComponent<Rigidbody>();
+        GameObject instantiatorObject = GameObject.Find("Instantiator");
+        BIS = instantiatorObject.GetComponent<BotInstantiator>();
         PUC = GetComponent<PickUpController>();
     }
     void Start(){
+        ID = GetID(gameObject.name);
         waitSecond = 1 / velocity;
         StartCoroutine(CheckHit());
     }
-    void FixedUpdate(){
-        HitHandler();
-        Move();
-    }
     void Move(){
-        botRigid.MovePosition(botRigid.position + transform.forward * Time.fixedDeltaTime * velocity);
+        if(velocity != tempVelocity){
+            velocity = tempVelocity;
+        }
+        botRigid.MovePosition(botRigid.position + transform.forward);
     }
 
     void HitHandler(){
-        if(isHit){
-            velocity = 0;
-            ClampPosition();
-            RotateToObject();
-        }
+        PerformRaycast();
+        // DEPENDE QUÉ RETORNE PYTHON!!!!!
+        // string function = pythonscript.choice()
+        // switch(function){
+        //     case "MoveForward":
+        //         Move();
+        //         break;
+        //     case "Grab":
+        //     case "Drop":
+        //     case "Turn":
+        //         velocity = 0;
+        //         ClampPosition();
+        //         if(function == "Turn")){
+        //            Turn();
+        //         }else if(function == "Grab"){
+        //             Grab();
+        //         }else if(function == "Drop"){
+        //             Drop();
+        //         }
+        //         break;
+        // }
     }
     IEnumerator CheckHit(){
-        while(true) {
-            Vector3 p1 = center.transform.position;
-
-            if (Physics.Raycast(p1, center.transform.forward, out RaycastHit hitForward, raySize)){
-                if (hitForward.collider.gameObject != this.gameObject){
-                    whatTouched = hitForward.collider.gameObject.tag;
-                    hitPoint = hitForward.point;
-                    objectRecognized = hitForward.collider.gameObject.name;
-                    Debug.Log(objectRecognized);
-                    isHit = true;
-                    yield break;
-                }
-            }
-
-            if (Physics.Raycast(p1, -center.transform.forward, out RaycastHit hitBackward, raySize)){
-                if (hitBackward.collider.gameObject != this.gameObject){
-                    whatTouched = hitBackward.collider.gameObject.tag;
-                    hitPoint = hitBackward.point;
-                    objectRecognized = hitBackward.collider.gameObject.name;
-                    isHit = true;
-                    yield break;
-                }
-            }
-
-            if (Physics.Raycast(p1, -center.transform.right, out RaycastHit hitLeft, raySize)){
-                if (hitLeft.collider.gameObject != this.gameObject){
-                    whatTouched = hitLeft.collider.gameObject.tag;
-                    hitPoint = hitLeft.point;
-                    objectRecognized = hitLeft.collider.gameObject.name;
-                    isHit = true;
-                    yield break;
-                }
-            }
-
-            if (Physics.Raycast(p1, center.transform.right, out RaycastHit hitRight, raySize)){
-                if (hitRight.collider.gameObject != this.gameObject){
-                    whatTouched = hitRight.collider.gameObject.tag;
-                    hitPoint = hitRight.point;
-                    objectRecognized = hitRight.collider.gameObject.name;
-                    isHit = true;
-                    yield break;
-                }
-            }
-
-            Debug.DrawRay(p1, center.transform.forward * raySize, Color.red);
-            Debug.DrawRay(p1, -center.transform.forward * raySize, Color.blue);
-            Debug.DrawRay(p1, -center.transform.right * raySize, Color.green);
-            Debug.DrawRay(p1, center.transform.right * raySize, Color.yellow);
-
+        while(true){
+            HitHandler();
+            stepsForBot ++;
             yield return new WaitForSeconds(waitSecond);
         }
     }
+    void PerformRaycast(){
+        Vector3 p1 = center.transform.position;
+        var hitResults = new List<(string direction, string objectLabel)>();
+
+        string rotationDirection = GetRotation();
+        Debug.Log(rotationDirection);
+
+        for(int i = 0; i < directions.Length; i++){
+            Vector3 adjustedDirection = GetAdjustedDirection(directions[i], rotationDirection);
+            
+            if(Physics.Raycast(p1, center.transform.TransformDirection(adjustedDirection), out RaycastHit hit, raySize)){
+                if(hit.collider.gameObject != this.gameObject){
+                    whatTouched = hit.collider.gameObject.tag;
+                    hitPoint = hit.point;
+                    objectRecognized = hit.collider.gameObject.name;
+                    hitResults.Add((directionLabels[i], whatTouched));
+                }
+            }else{
+                hitResults.Add((directionLabels[i], "0"));
+            }
+        }
+
+        resultTuple = hitResults.ToArray();
+        string res = ConvertResultTupleToString();
+        JSONpy toPython = new JSONpy(ID, GetRotation(), res, hasObject, CompletedScene());
+        string json = EditorJsonUtility.ToJson(toPython);
+        Debug.Log(json);
+
+        // Debugging raycasts
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.forward) * raySize, Color.red);
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.back) * raySize, Color.blue);
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.right) * raySize, Color.green);
+        Debug.DrawRay(p1, center.transform.TransformDirection(Vector3.left) * raySize, Color.yellow);
+
+    }
+    Vector3 GetAdjustedDirection(Vector3 direction, string rotationDirection){
+        switch(rotationDirection){
+            case "E": //
+                return new Vector3(-direction.x, direction.y, -direction.z);
+            case "N": //
+                return new Vector3(-direction.z, direction.y, direction.x);
+            case "W":
+                return direction;
+            case "S": //
+                return new Vector3(direction.z, direction.y, -direction.x);
+            default:
+                return direction;
+        }
+    }
+
     void ClampPosition(){
         Vector3 position = transform.position;
 
@@ -126,39 +163,67 @@ public class RobotMovementManager : MonoBehaviour
         transform.rotation = Quaternion.Euler(eulerRotation);
         botRigid.rotation = Quaternion.Euler(eulerRotation);
     }
-
-    void RotateToObject(){
-        Vector3 direction = hitPoint - transform.position;
-        direction.y = 0;
-
-        targetRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
-
-        if (Quaternion.Angle(transform.rotation, targetRotation) < 0.05f){
-            transform.rotation = targetRotation;
-            DecisionMaking();
+    
+    void Grab(){
+        if (!PUC.hasObject){
+            PUC.PickUp();
+            hasObject = PUC.hasObject;
+            ClampPosition();
+            ClampRotation();
         }
     }
-    void DecisionMaking(){
-        switch(whatTouched){
-            case "Object":
-                if (!PUC.hasObject){
-                    PUC.PickUp();
-                    ClampPosition();
-                    ClampRotation();
-                    velocity = tempVelocity;
-                    isHit = false;
-                    StartCoroutine(CheckHit());
-                }
-                //Podemos cambiar esto despues
-                break;
-            case "Wall":
-                break;
-            case "Bot":
-                break;
-            default:
-                break;
+    void Drop(){
+        PUC.Drop();
+        hasObject = PUC.hasObject;
+        ClampPosition();
+        ClampRotation();
+    }
+    
+    void Turn(){
+        float currentYRotation = transform.eulerAngles.y;
+        Quaternion targetRotation = Quaternion.Euler(0, currentYRotation + 90f, 0);
+
+        transform.rotation = targetRotation;
+        botRigid.rotation = targetRotation;
+
+        ClampRotation();
+    }
+    string GetID(string name){
+        string[] parts = name.Split(' ');
+        return parts[parts.Length - 1];
+    }
+    string GetRotation(){
+        float yRotation = transform.eulerAngles.y;
+        yRotation = (yRotation + 360f) % 360f;  // Normalize to 0-360 range
+
+        if (yRotation > 315f || yRotation <= 45f)
+            return "W";
+        if (yRotation > 45f && yRotation <= 135f)
+            return "N";
+        if (yRotation > 135f && yRotation <= 225f)
+            return "E";
+        if (yRotation > 225f && yRotation <= 315f)
+            return "S";
+
+        return "Not valid";
+    }
+
+    bool CompletedScene(){
+        if(BIS.initialPlaced != BIS.totalPlaced){
+            return false;
         }
+        return true;
+    }
+    public string ConvertResultTupleToString(){
+        if (resultTuple == null || resultTuple.Length == 0)
+            return "No results available";
+        List<string> formattedResults = new List<string>();
+
+        foreach (var tuple in resultTuple)
+        {
+            formattedResults.Add($"Direction: {tuple.direction}, Object: {tuple.objectLabel}");
+        }
+        return string.Join("; ", formattedResults);
     }
 
 }
