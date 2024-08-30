@@ -53,11 +53,13 @@ public class BotInstantiator : MonoBehaviour
         new Vector3(-2.5f,0,5.5f),
         new Vector3(-1.5f,0,5.5f),
         new Vector3(-0.5f,0,5.5f),
-    }; 
-    public float timer = 20f;
+    };
+    [Header("Scene settings")]
+    public float timer = 70f;
     public int totalPlaced = 0;
     public int initialPlaced = 0;
-    Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>(); //tambien mandar esto
+    Dictionary<string, Vector3> positionTracker = new Dictionary<string, Vector3>();
+    private bool gameEnded = false;
     void Start()
     {
         ShelfSpawner();
@@ -71,8 +73,9 @@ public class BotInstantiator : MonoBehaviour
     void FixedUpdate(){
         if(timer > 0){
             timer -= Time.deltaTime;
-        }else{
-            Debug.Log("STOP");
+        }else if (!gameEnded){
+            gameEnded = true;
+            LogResults();
         }
     }
 
@@ -186,5 +189,13 @@ public class BotInstantiator : MonoBehaviour
                 break;
         }
         return rotation;
+    }
+    void LogResults(){
+        Time.timeScale = 0;
+
+        Debug.Log("--ENDED SIMULATION--");
+        Debug.Log("Total Picked Up: " + totalPlaced);
+        Debug.Log("Initial items: " + initialPlaced);
+        Debug.Log("To see each robot's steps, click on them individually and check their Robot Movement Manager in the inspector.");
     }
 }
