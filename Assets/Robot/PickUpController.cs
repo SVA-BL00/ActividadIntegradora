@@ -48,7 +48,6 @@ public class PickUpController : MonoBehaviour
         hasObject = false;
         objectPile.objectsPiled++;
         BIS.totalPlaced++;
-        Debug.Log("Object dropped successfully on shelf: " + name);
     }
 
 }

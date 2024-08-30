@@ -192,7 +192,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6513934479420351314}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 50
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -245,12 +245,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectsPiled: 0
-  slots:
-  - {fileID: 868587135043442559}
-  - {fileID: 7469175504210943971}
-  - {fileID: 9048457421047028000}
-  - {fileID: 5596934707920607780}
-  - {fileID: 5869945205414720442}
 --- !u!1 &7469175504210943971
 GameObject:
   m_ObjectHideFlags: 0
