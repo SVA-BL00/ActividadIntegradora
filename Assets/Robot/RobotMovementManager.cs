@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 
 public class RobotMovementManager : MonoBehaviour
 {
+    public Request Request;
     Rigidbody botRigid;
     public float velocity;
     public float tempVelocity;
@@ -19,7 +18,6 @@ public class RobotMovementManager : MonoBehaviour
     private float waitSecond;
     public string objectRecognized = "Unknown";
     private PickUpController PUC;
-
     public int stepsForBot = 0;
     public BotInstantiator BIS;
     public JSONpy toPython;
@@ -36,6 +34,8 @@ public class RobotMovementManager : MonoBehaviour
     public (string direction, string objectLabel)[] resultTuple;
     public bool hasObject = false;
     public string ID;
+
+    public string[] objectsRecognized = new string[4];
     public void Init(float _velocity){
         velocity = _velocity;
         tempVelocity = _velocity;
@@ -43,6 +43,10 @@ public class RobotMovementManager : MonoBehaviour
 
     void Awake(){
         botRigid = GetComponent<Rigidbody>();
+        if (Request == null)
+        {
+            Request = FindObjectOfType<Request>();
+        }
         GameObject instantiatorObject = GameObject.Find("Instantiator");
         BIS = instantiatorObject.GetComponent<BotInstantiator>();
         PUC = GetComponent<PickUpController>();
@@ -61,26 +65,33 @@ public class RobotMovementManager : MonoBehaviour
 
     void HitHandler(){
         PerformRaycast();
-        // DEPENDE QUÉ RETORNE PYTHON!!!!!
-        // string function = pythonscript.choice()
-        // switch(function){
-        //     case "MoveForward":
-        //         Move();
-        //         break;
-        //     case "Grab":
-        //     case "Drop":
-        //     case "Turn":
-        //         velocity = 0;
-        //         ClampPosition();
-        //         if(function == "Turn")){
-        //            Turn();
-        //         }else if(function == "Grab"){
-        //             Grab();
-        //         }else if(function == "Drop"){
-        //             Drop();
-        //         }
-        //         break;
-        // }
+        Request.SendDataToServer(toPython, HandleServerResponse);
+    }
+
+    void HandleServerResponse(string response){
+        if(string.IsNullOrEmpty(response)){
+            Debug.LogError("Failed to receive a valid response from the server.");
+            return;
+        }
+        switch(response){
+            case "move":
+                Move();
+                break;
+            case "grab":
+            case "drop":
+            case "turn":
+                velocity = 0;
+                ClampPosition();
+                if(response == "turn"){
+                    Turn();
+                }else if(response == "grab"){
+                    Grab();
+                }else if(response == "drop"){
+                    Drop();
+                }
+                break;
+        }
+        
     }
     IEnumerator CheckHit(){
         while(true){
@@ -90,6 +101,7 @@ public class RobotMovementManager : MonoBehaviour
         }
     }
     void PerformRaycast(){
+        Array.Clear(objectsRecognized, 0, objectsRecognized.Length);
         Vector3 p1 = center.transform.position;
         var hitResults = new List<(string direction, string objectLabel)>();
 
@@ -105,7 +117,8 @@ public class RobotMovementManager : MonoBehaviour
                         whatTouched = "0";
                     }
                     hitPoint = hit.point;
-                    objectRecognized = hit.collider.gameObject.name;
+                    string objectRecognized = hit.collider.gameObject.name; // Use a local variable for recognized object name
+                    objectsRecognized[i] = objectRecognized;
                     hitResults.Add((directionLabels[i], whatTouched));
                 }
             }else{
@@ -166,16 +179,41 @@ public class RobotMovementManager : MonoBehaviour
     }
     
     void Grab(){
-        if (!PUC.hasObject){
-            PUC.PickUp();
+        string name = null;
+        for(int i = 0; i < objectsRecognized.Length; i++){
+            if(objectsRecognized[i] != null){
+                if(objectsRecognized[i].StartsWith("Box")||objectsRecognized[i].StartsWith("Book")|| objectsRecognized[i].StartsWith("Kit")){
+                    name = objectsRecognized[i];
+                    break;
+                }
+            }
+        }if(PUC == null){
+            PUC = GetComponent<PickUpController>();
+        }
+        if(!PUC.hasObject){
+            PUC.PickUp(name);
             hasObject = PUC.hasObject;
             ClampPosition();
             ClampRotation();
         }
     }
     void Drop(){
-        PUC.Drop();
-        hasObject = PUC.hasObject;
+        string name = null;
+        for(int i = 0; i < objectsRecognized.Length; i++) {
+            if(objectsRecognized[i] != null){
+                if(objectsRecognized[i].StartsWith("Rack")){
+                    name = objectsRecognized[i];
+                    break;
+                }
+            }
+        }
+        if(name != null){
+            PUC.Drop(name);
+            hasObject = PUC.hasObject;
+        }else{
+            Debug.LogWarning("No object starting with 'Rack' found.");
+        }
+
         ClampPosition();
         ClampRotation();
     }
@@ -188,6 +226,7 @@ public class RobotMovementManager : MonoBehaviour
         botRigid.rotation = targetRotation;
 
         ClampRotation();
+        ClampPosition();
     }
     string GetID(string name){
         string[] parts = name.Split(' ');
@@ -220,11 +259,10 @@ public class RobotMovementManager : MonoBehaviour
             return "No results available";
         List<string> formattedResults = new List<string>();
 
-        foreach (var tuple in resultTuple)
-        {
-            formattedResults.Add($"Direction: {tuple.direction}, Object: {tuple.objectLabel}");
+        foreach (var tuple in resultTuple){
+            formattedResults.Add($"('{tuple.direction}','{tuple.objectLabel}')");
         }
-        return string.Join("; ", formattedResults);
+        return string.Join(", ", formattedResults);
     }
 
 }
